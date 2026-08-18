@@ -1185,33 +1185,36 @@ export default function LearoLab() {
   const [badges, setBadges] = useState([]);
   const [readStories, setReadStories] = useState(new Set());
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const result = await window.storage.get(STORAGE_KEY, false);
-        if (result && result.value) {
-          const data = JSON.parse(result.value);
-          if (data.themeKey) setThemeKey(data.themeKey);
-          if (data.ageGroup) setAgeGroup(data.ageGroup);
-          if (data.progress) setProgress({ ...DEFAULT_PROGRESS, ...data.progress });
-          if (typeof data.xp === "number") setXp(data.xp);
-          if (typeof data.overallStreak === "number") setOverallStreak(data.overallStreak);
-          if (Array.isArray(data.tried)) setTried(new Set(data.tried));
-          if (Array.isArray(data.badges)) setBadges(data.badges);
-          if (Array.isArray(data.readStories)) setReadStories(new Set(data.readStories));
-        }
-      } catch (err) {
-        // no save yet, or storage unavailable — start fresh
-      } finally {
-        setLoaded(true);
-      }
-    })();
-  }, []);
+ useEffect(() => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
 
+    if (saved) {
+      const data = JSON.parse(saved);
+
+      if (data.themeKey) setThemeKey(data.themeKey);
+      if (data.ageGroup) setAgeGroup(data.ageGroup);
+      if (data.progress) setProgress({ ...DEFAULT_PROGRESS, ...data.progress });
+      if (typeof data.xp === "number") setXp(data.xp);
+      if (typeof data.overallStreak === "number") setOverallStreak(data.overallStreak);
+      if (Array.isArray(data.tried)) setTried(new Set(data.tried));
+      if (Array.isArray(data.badges)) setBadges(data.badges);
+      if (Array.isArray(data.readStories)) setReadStories(new Set(data.readStories));
+    }
+  } catch (err) {
+    console.error("Could not load LearoLab progress:", err);
+  } finally {
+    setLoaded(true);
+  }
+}, []);
   useEffect(() => {
     if (!loaded) return;
     const data = { themeKey, ageGroup, progress, xp, overallStreak, tried: Array.from(tried), badges, readStories: Array.from(readStories) };
-    window.storage.set(STORAGE_KEY, JSON.stringify(data), false).catch(() => {});
+  try {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+} catch (err) {
+  console.error("Could not save LearoLab progress:", err);
+}
   }, [loaded, themeKey, ageGroup, progress, xp, overallStreak, tried, badges, readStories]);
 
   function handleReset() {
@@ -1223,8 +1226,12 @@ export default function LearoLab() {
     setTried(new Set());
     setBadges([]);
     setReadStories(new Set());
-    window.storage.delete(STORAGE_KEY, false).catch(() => {});
-  }
+    try {
+  localStorage.removeItem(STORAGE_KEY);
+} catch (err) {
+  console.error("Could not reset LearoLab progress:", err);
+}
+  
 
   if (!loaded) {
     return (
