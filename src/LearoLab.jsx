@@ -1217,20 +1217,24 @@ export default function LearoLab() {
 }
   }, [loaded, themeKey, ageGroup, progress, xp, overallStreak, tried, badges, readStories]);
 
-  function handleReset() {
-    setThemeKey("jungle");
-    setAgeGroup(null);
-    setProgress(DEFAULT_PROGRESS);
-    setXp(0);
-    setOverallStreak(0);
-    setTried(new Set());
-    setBadges([]);
-    setReadStories(new Set());
-    try {
-  localStorage.removeItem(STORAGE_KEY);
-} catch (err) {
-  console.error("Could not reset LearoLab progress:", err);
-}
+function handleReset() {
+  setThemeKey("jungle");
+  setAgeGroup(null);
+  setProgress(DEFAULT_PROGRESS);
+  setXp(0);
+  setOverallStreak(0);
+  setTried(new Set());
+  setBadges([]);
+  setReadStories(new Set());
+
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (err) {
+    console.error("Could not reset LearoLab progress:", err);
+  }
+}   // ← THIS IS THE MISSING LINE
+
+if (!loaded) {
   
 
   if (!loaded) {
