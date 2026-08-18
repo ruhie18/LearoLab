@@ -1175,6 +1175,7 @@ const DEFAULT_PROGRESS = {
 export default function LearoLab() {
   useFonts();
   useAnimStyles();
+
   const [loaded, setLoaded] = useState(false);
   const [themeKey, setThemeKey] = useState("jungle");
   const [ageGroup, setAgeGroup] = useState(null);
@@ -1185,77 +1186,143 @@ export default function LearoLab() {
   const [badges, setBadges] = useState([]);
   const [readStories, setReadStories] = useState(new Set());
 
- useEffect(() => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(STORAGE_KEY);
 
-    if (saved) {
-      const data = JSON.parse(saved);
+      if (saved) {
+        const data = JSON.parse(saved);
 
-      if (data.themeKey) setThemeKey(data.themeKey);
-      if (data.ageGroup) setAgeGroup(data.ageGroup);
-      if (data.progress) setProgress({ ...DEFAULT_PROGRESS, ...data.progress });
-      if (typeof data.xp === "number") setXp(data.xp);
-      if (typeof data.overallStreak === "number") setOverallStreak(data.overallStreak);
-      if (Array.isArray(data.tried)) setTried(new Set(data.tried));
-      if (Array.isArray(data.badges)) setBadges(data.badges);
-      if (Array.isArray(data.readStories)) setReadStories(new Set(data.readStories));
+        if (data.themeKey && THEMES[data.themeKey]) {
+          setThemeKey(data.themeKey);
+        }
+
+        if (data.ageGroup) {
+          setAgeGroup(data.ageGroup);
+        }
+
+        if (data.progress) {
+          setProgress({
+            ...DEFAULT_PROGRESS,
+            ...data.progress,
+          });
+        }
+
+        if (typeof data.xp === "number") {
+          setXp(data.xp);
+        }
+
+        if (typeof data.overallStreak === "number") {
+          setOverallStreak(data.overallStreak);
+        }
+
+        if (Array.isArray(data.tried)) {
+          setTried(new Set(data.tried));
+        }
+
+        if (Array.isArray(data.badges)) {
+          setBadges(data.badges);
+        }
+
+        if (Array.isArray(data.readStories)) {
+          setReadStories(new Set(data.readStories));
+        }
+      }
+    } catch (err) {
+      console.error("Could not load LearoLab progress:", err);
+    } finally {
+      setLoaded(true);
     }
-  } catch (err) {
-    console.error("Could not load LearoLab progress:", err);
-  } finally {
-    setLoaded(true);
-  }
-}, []);
+  }, []);
+
   useEffect(() => {
     if (!loaded) return;
-    const data = { themeKey, ageGroup, progress, xp, overallStreak, tried: Array.from(tried), badges, readStories: Array.from(readStories) };
-  try {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-} catch (err) {
-  console.error("Could not save LearoLab progress:", err);
-}
-  }, [loaded, themeKey, ageGroup, progress, xp, overallStreak, tried, badges, readStories]);
 
-function handleReset() {
-  setThemeKey("jungle");
-  setAgeGroup(null);
-  setProgress(DEFAULT_PROGRESS);
-  setXp(0);
-  setOverallStreak(0);
-  setTried(new Set());
-  setBadges([]);
-  setReadStories(new Set());
+    const data = {
+      themeKey,
+      ageGroup,
+      progress,
+      xp,
+      overallStreak,
+      tried: Array.from(tried),
+      badges,
+      readStories: Array.from(readStories),
+    };
 
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch (err) {
-    console.error("Could not reset LearoLab progress:", err);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (err) {
+      console.error("Could not save LearoLab progress:", err);
+    }
+  }, [
+    loaded,
+    themeKey,
+    ageGroup,
+    progress,
+    xp,
+    overallStreak,
+    tried,
+    badges,
+    readStories,
+  ]);
+
+  function handleReset() {
+    setThemeKey("jungle");
+    setAgeGroup(null);
+    setProgress(DEFAULT_PROGRESS);
+    setXp(0);
+    setOverallStreak(0);
+    setTried(new Set());
+    setBadges([]);
+    setReadStories(new Set());
+
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      console.error("Could not reset LearoLab progress:", err);
+    }
   }
-}   // ← THIS IS THE MISSING LINE
-
-if (!loaded) {
-  
 
   if (!loaded) {
     return (
-      <div style={{ minHeight: 300, display: "flex", alignItems: "center", justifyContent: "center", background: THEMES.jungle.bg, borderRadius: 12, fontFamily: "Nunito, sans-serif", color: THEMES.jungle.ink }}>
+      <div
+        style={{
+          minHeight: 300,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: THEMES.jungle.bg,
+          borderRadius: 12,
+          fontFamily: "Nunito, sans-serif",
+          color: THEMES.jungle.ink,
+        }}
+      >
         Loading your trail…
       </div>
     );
   }
 
+  const activeTheme = THEMES[themeKey] || THEMES.jungle;
+
   return (
-    <ThemeContext.Provider value={THEMES[themeKey]}>
+    <ThemeContext.Provider value={activeTheme}>
       <AppInner
-        themeKey={themeKey} setThemeKey={setThemeKey}
-        ageGroup={ageGroup} setAgeGroup={setAgeGroup}
-        progress={progress} setProgress={setProgress}
-        xp={xp} setXp={setXp}
-        overallStreak={overallStreak} setOverallStreak={setOverallStreak}
-        tried={tried} setTried={setTried}
-        badges={badges} setBadges={setBadges}
-        readStories={readStories} setReadStories={setReadStories}
+        themeKey={themeKey}
+        setThemeKey={setThemeKey}
+        ageGroup={ageGroup}
+        setAgeGroup={setAgeGroup}
+        progress={progress}
+        setProgress={setProgress}
+        xp={xp}
+        setXp={setXp}
+        overallStreak={overallStreak}
+        setOverallStreak={setOverallStreak}
+        tried={tried}
+        setTried={setTried}
+        badges={badges}
+        setBadges={setBadges}
+        readStories={readStories}
+        setReadStories={setReadStories}
         onReset={handleReset}
       />
     </ThemeContext.Provider>
